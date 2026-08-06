@@ -1,10 +1,5 @@
-jest.mock('cross-fetch');
-
 beforeEach(() => {
-    // reset the metadata container to ensure the tests don't interfere with each other
-    // but this also means we need to `require` inside the tests
-    /* eslint-disable global-require */
-    jest.resetModules();
+    vi.resetModules();
 
     // temporary: pretend we're running in a browser and the URL has scratchMetadata=1
     // this is a hack to enable the metadata feature in tests
@@ -14,7 +9,7 @@ beforeEach(() => {
 });
 
 test('get without metadata', async () => {
-    const FetchTool = require('../../src/FetchTool.js');
+    const {default: FetchTool} = await import('../../src/FetchTool');
     const tool = new FetchTool();
 
     const mockFetchTestData = {};
@@ -26,8 +21,8 @@ test('get without metadata', async () => {
 });
 
 test('get with metadata', async () => {
-    const FetchTool = require('../../src/FetchTool.js');
-    const ScratchFetch = require('../../src/scratchFetch');
+    const {default: FetchTool} = await import('../../src/FetchTool');
+    const ScratchFetch = await import('../../src/scratchFetch');
     const {RequestMetadata, setMetadata} = ScratchFetch;
 
     const tool = new FetchTool();
@@ -46,7 +41,7 @@ test('get with metadata', async () => {
 });
 
 test('send without metadata', async () => {
-    const FetchTool = require('../../src/FetchTool.js');
+    const {default: FetchTool} = await import('../../src/FetchTool');
     const tool = new FetchTool();
 
     const mockFetchTestData = {};
@@ -58,8 +53,8 @@ test('send without metadata', async () => {
 });
 
 test('send with metadata', async () => {
-    const FetchTool = require('../../src/FetchTool.js');
-    const ScratchFetch = require('../../src/scratchFetch');
+    const {default: FetchTool} = await import('../../src/FetchTool');
+    const ScratchFetch = await import('../../src/scratchFetch');
     const {RequestMetadata, setMetadata} = ScratchFetch;
 
     const tool = new FetchTool();
@@ -78,8 +73,8 @@ test('send with metadata', async () => {
 });
 
 test('selectively delete metadata', async () => {
-    const FetchTool = require('../../src/FetchTool.js');
-    const ScratchFetch = require('../../src/scratchFetch');
+    const {default: FetchTool} = await import('../../src/FetchTool');
+    const ScratchFetch = await import('../../src/scratchFetch');
     const {RequestMetadata, setMetadata, unsetMetadata} = ScratchFetch;
 
     // verify that these special values are preserved and not interpreted as "delete"
@@ -111,8 +106,8 @@ test('selectively delete metadata', async () => {
 });
 
 test('metadata has case-insensitive keys', async () => {
-    const FetchTool = require('../../src/FetchTool.js');
-    const ScratchFetch = require('../../src/scratchFetch');
+    const {default: FetchTool} = await import('../../src/FetchTool');
+    const ScratchFetch = await import('../../src/scratchFetch');
     const {setMetadata} = ScratchFetch;
 
     setMetadata('foo', 1);

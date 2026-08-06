@@ -1,4 +1,5 @@
-const ScratchStorage = require('../../src');
+import ScratchStorage from '../../src/index';
+import {TextEncoder} from 'util';
 
 /**
  * Simulate a storage helper, adding log messages when "load" is called rather than actually loading anything.
@@ -29,7 +30,9 @@ class LoggingHelper {
     load (assetType, assetId, dataFormat) {
         this.logContainer.push(this.label);
         return this.shouldSucceed ?
-            Promise.resolve(new this.storage.Asset(assetType, assetId, dataFormat, Buffer.from(this.label))) :
+            Promise.resolve(
+                new this.storage.Asset(assetType, assetId, dataFormat, new TextEncoder().encode(this.label))
+            ) :
             Promise.reject(new Error(`This is an expected failure from ${this.label}`));
     }
 }

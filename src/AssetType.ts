@@ -1,8 +1,6 @@
-const DataFormat = require('./DataFormat');
+import DataFormat from './DataFormat';
 
 /**
- * Enumeration of the supported asset types.
- * @type {Object.<String,AssetType>}
  * @typedef {Object} AssetType - Information about a supported asset type.
  * @property {string} contentType - the MIME type associated with this kind of data. Useful for data URIs, etc.
  * @property {string} name - The human-readable name of this asset type.
@@ -10,6 +8,14 @@ const DataFormat = require('./DataFormat');
  *     example, a project stored in SB2 format on disk will be returned as JSON when loaded into memory.
  * @property {boolean} immutable - Indicates if the asset id is determined by the asset content.
  */
+
+interface AssetTypeEntry {
+    contentType: string;
+    name: string;
+    runtimeFormat: string;
+    immutable: boolean;
+}
+
 const AssetType = {
     ImageBitmap: {
         contentType: 'image/png',
@@ -73,4 +79,6 @@ const AssetType = {
     }
 };
 
-module.exports = AssetType;
+type AssetType = AssetTypeEntry;
+export { AssetType };
+export default AssetType;

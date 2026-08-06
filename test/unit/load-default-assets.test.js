@@ -1,6 +1,5 @@
-const md5 = require('js-md5');
-
-const ScratchStorage = require('../../src');
+import md5 from 'js-md5';
+import ScratchStorage from '../../src/index';
 
 // Hash and file size of each default asset
 const knownSizes = {

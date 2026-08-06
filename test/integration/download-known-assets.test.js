@@ -1,6 +1,5 @@
-const md5 = require('js-md5');
-
-const ScratchStorage = require('../../src/index.js');
+import md5 from 'js-md5';
+import ScratchStorage from '../../src/index';
 
 test('constructor', () => {
     const storage = new ScratchStorage();
@@ -112,7 +111,7 @@ test('load', () => {
                         e.flat(),
                         `failed to load ${assetInfo.type.name} asset with id=${assetInfo.id}`
                     );
-                    // Jest doesn't display AggregateError very well on its own
+                    // Vitest doesn't display AggregateError very well on its own
                     console.error(e);
                 } else if (!(e instanceof Error)) {
                     // storage.load can throw a status like 403 or 500 which isn't an Error.
@@ -132,7 +131,7 @@ test('load', () => {
         expect(asset.clean).toBeTruthy();
 
         if (assetInfo.md5) {
-            // eslint-disable-next-line jest/no-conditional-expect
+            // Note: conditional expect is intentional here
             expect(md5(asset.data)).toBe(assetInfo.md5);
         }
     });

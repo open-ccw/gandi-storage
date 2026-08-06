@@ -1,20 +1,18 @@
-const TextDecoder = require('util').TextDecoder;
-
-jest.mock('cross-fetch');
-const mockFetch = require('cross-fetch');
-const FetchTool = require('../../src/FetchTool.js');
+import {TextDecoder} from 'util';
+import {successText} from '../setup';
+import FetchTool from '../../src/FetchTool';
 
 test('send success returns response.text()', async () => {
     const tool = new FetchTool();
 
     const result = await tool.send({url: '200'});
-    expect(result).toBe(mockFetch.successText);
+    expect(result).toBe(successText);
 });
 
 test('send failure returns response.status', async () => {
     const tool = new FetchTool();
 
-    const catcher = jest.fn();
+    const catcher = vi.fn();
 
     try {
         await tool.send({url: '500'});
@@ -32,7 +30,7 @@ test('get success returns Uint8Array.body(response.arrayBuffer())', async () => 
     const tool = new FetchTool();
 
     const result = await tool.get({url: '200'});
-    expect(decoder.decode(result)).toBe(mockFetch.successText);
+    expect(decoder.decode(result)).toBe(successText);
 });
 
 test('get with 404 response returns null data', async () => {
@@ -44,7 +42,7 @@ test('get with 404 response returns null data', async () => {
 
 test('get failure returns response.status', async () => {
     const tool = new FetchTool();
-    const catcher = jest.fn();
+    const catcher = vi.fn();
 
     try {
         await tool.get({url: '500'});

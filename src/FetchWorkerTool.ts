@@ -1,9 +1,30 @@
-const {Headers, applyMetadata} = require('./scratchFetch');
+import { applyMetadata } from './scratchFetch';
+import FetchWorker from './FetchWorkerTool.worker.js?worker&inline';
+
+interface FetchJob {
+    id: string;
+    resolve: (value: Uint8Array | null) => void;
+    reject: (reason?: any) => void;
+}
 
 /**
  * Get and send assets with a worker that uses fetch.
  */
 class PrivateFetchWorkerTool {
+    /** @type {{fetch:boolean}} */
+    _workerSupport: {fetch: boolean};
+
+    /** @type {Error | null} */
+    _supportError: Error | null;
+
+    /** @type {Worker | null} */
+    worker: Worker | null;
+
+    /** @type {Record<string, FetchJob>} */
+    jobs: Record<string, FetchJob>;
+
+    static _instance: PrivateFetchWorkerTool | null;
+
     constructor () {
         /**
          * What does the worker support of the APIs we need?
@@ -33,12 +54,9 @@ class PrivateFetchWorkerTool {
 
         try {
             if (this.isGetSupported) {
-                // eslint-disable-next-line global-require
-                const FetchWorker = require('worker-loader?{"inline":true,"fallback":true}!./FetchWorkerTool.worker');
-
                 const worker = new FetchWorker();
 
-                worker.addEventListener('message', ({data}) => {
+                worker.addEventListener('message', ({data}: {data: any}) => {
                     if (data.support) {
                         this._workerSupport = data.support;
                         return;
@@ -58,7 +76,7 @@ class PrivateFetchWorkerTool {
                 this.worker = worker;
             }
         } catch (error) {
-            this._supportError = error;
+            this._supportError = error as Error;
         }
     }
 
@@ -70,7 +88,7 @@ class PrivateFetchWorkerTool {
      * guess that it does if the window does until the worker can inform us.
      * @returns {boolean} Is get supported?
      */
-    get isGetSupported () {
+    get isGetSupported (): boolean {
         return (
             typeof Worker !== 'undefined' &&
             this._workerSupport.fetch &&
@@ -82,24 +100,26 @@ class PrivateFetchWorkerTool {
      * Request data from a server with a worker using fetch.
      * @param {{url:string}} reqConfig - Request configuration for data to get.
      * @param {{method:string}} options - Additional options to configure fetch.
-     * @returns {Promise.<Buffer|Uint8Array|null>} Resolve to Buffer of data from server.
+     * @returns {Promise.<Uint8Array|null>} Resolve to Buffer of data from server.
      */
-    get ({url, ...options}) {
-        return new Promise((resolve, reject) => {
+    get ({url, ...options}: {url: string; [key: string]: any}): Promise<Uint8Array | null> {
+        return new Promise<Uint8Array | null>((resolve, reject) => {
             // TODO: Use a Scratch standard ID generator ...
             const id = Math.random().toString(16)
                 .substring(2);
             const augmentedOptions = applyMetadata(
-                Object.assign({method: 'GET'}, options)
+                Object.assign({method: 'GET'} as RequestInit, options)
             );
             // the Fetch spec says options.headers could be:
             // "A Headers object, an object literal, or an array of two-item arrays to set request's headers."
             // structured clone (postMessage) doesn't support Headers objects
             // so turn it into an array of two-item arrays to make it to the worker intact
             if (augmentedOptions && augmentedOptions.headers instanceof Headers) {
-                augmentedOptions.headers = Array.from(augmentedOptions.headers.entries());
+                augmentedOptions.headers = Array.from(
+                    (augmentedOptions.headers as any).entries()
+                ) as [string, string][];
             }
-            this.worker.postMessage({
+            this.worker!.postMessage({
                 id,
                 url,
                 options: augmentedOptions
@@ -111,14 +131,14 @@ class PrivateFetchWorkerTool {
             };
         })
             /* eslint no-confusing-arrow: ["error", {"allowParens": true}] */
-            .then(body => (body ? new Uint8Array(body) : null));
+            .then((body: ArrayBuffer | null) => (body ? new Uint8Array(body) : null));
     }
 
     /**
      * Is sending supported? always false for FetchWorkerTool.
      * @returns {boolean} Is sending supported?
      */
-    get isSendSupported () {
+    get isSendSupported (): boolean {
         return false;
     }
 
@@ -135,7 +155,7 @@ class PrivateFetchWorkerTool {
      * @returns {PrivateFetchWorkerTool} A static PrivateFetchWorkerTool
      *   instance
      */
-    static get instance () {
+    static get instance (): PrivateFetchWorkerTool {
         if (!this._instance) {
             this._instance = new PrivateFetchWorkerTool();
         }
@@ -147,6 +167,9 @@ class PrivateFetchWorkerTool {
  * Get and send assets with a worker that uses fetch.
  */
 class PublicFetchWorkerTool {
+    /** @type {PrivateFetchWorkerTool} */
+    inner: PrivateFetchWorkerTool;
+
     constructor () {
         /**
          * Shared instance of an internal worker. PublicFetchWorkerTool proxies
@@ -160,16 +183,16 @@ class PublicFetchWorkerTool {
      * Is get supported?
      * @returns {boolean} Is get supported?
      */
-    get isGetSupported () {
+    get isGetSupported (): boolean {
         return this.inner.isGetSupported;
     }
 
     /**
      * Request data from a server with a worker that uses fetch.
      * @param {{url:string}} reqConfig - Request configuration for data to get.
-     * @returns {Promise.<Buffer|Uint8Array|null>} Resolve to Buffer of data from server.
+     * @returns {Promise.<Uint8Array|null>} Resolve to Buffer of data from server.
      */
-    get (reqConfig) {
+    get (reqConfig: {url: string; [key: string]: any}): Promise<Uint8Array | null> {
         return this.inner.get(reqConfig);
     }
 
@@ -177,7 +200,7 @@ class PublicFetchWorkerTool {
      * Is sending supported?
      * @returns {boolean} Is sending supported?
      */
-    get isSendSupported () {
+    get isSendSupported (): boolean {
         return false;
     }
 
@@ -190,4 +213,4 @@ class PublicFetchWorkerTool {
     }
 }
 
-module.exports = PublicFetchWorkerTool;
+export default PublicFetchWorkerTool;

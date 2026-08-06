@@ -1,9 +1,15 @@
+import { AssetType } from './AssetType';
+import { DataFormat } from './DataFormat';
+import Asset from './Asset';
+
 /**
  * Base class for asset load/save helpers.
  * @abstract
  */
 class Helper {
-    constructor (parent) {
+    parent: any;
+
+    constructor (parent: any) {
         this.parent = parent;
     }
 
@@ -14,9 +20,9 @@ class Helper {
      * @param {DataFormat} dataFormat - The file format / file extension of the asset to fetch: PNG, JPG, etc.
      * @return {Promise.<Asset>} A promise for the contents of the asset.
      */
-    load (assetType, assetId, dataFormat) {
+    load (assetType: AssetType, assetId: string, dataFormat: DataFormat): Promise<Asset | null> | null {
         return Promise.reject(new Error(`No asset of type ${assetType} for ID ${assetId} with format ${dataFormat}`));
     }
 }
 
-module.exports = Helper;
+export default Helper;

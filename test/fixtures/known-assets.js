@@ -1,7 +1,10 @@
-const fs = require('fs');
-const path = require('path');
+import {fileURLToPath} from 'url';
+import fs from 'fs';
+import path from 'path';
+import md5 from 'js-md5';
 
-const md5 = require('js-md5');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const projects = [
     '117504922'
@@ -29,7 +32,6 @@ const loadProject = id => {
     const filename = `${id}.json`;
     const result = loadSomething(filename);
 
-    // throw if not a valid JSON string
     JSON.parse(result.content.toString());
 
     return result;
@@ -57,4 +59,4 @@ const knownAssets = Object.assign({},
     }, {})
 );
 
-module.exports = knownAssets;
+export default knownAssets;

@@ -16,4 +16,6 @@ const DataFormat = {
     GLSL: 'glsl'
 };
 
-module.exports = DataFormat;
+type DataFormat = (typeof DataFormat)[keyof typeof DataFormat];
+export { DataFormat };
+export default DataFormat;

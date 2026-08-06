@@ -1,5 +1,3 @@
-const crossFetch = require('cross-fetch');
-
 /**
  * Metadata header names
  * @enum {string} The enum value is the name of the associated header.
@@ -16,13 +14,13 @@ const RequestMetadata = {
  * Metadata headers for requests
  * @type {Headers}
  */
-const metadata = new crossFetch.Headers();
+const metadata: Headers = new Headers();
 
 /**
  * Check if there is any metadata to apply.
  * @returns {boolean} true if `metadata` has contents, or false if it is empty.
  */
-const hasMetadata = () => {
+const hasMetadata = (): boolean => {
     /* global self */
     const searchParams = (
         typeof self !== 'undefined' &&
@@ -36,10 +34,11 @@ const hasMetadata = () => {
         // TODO: remove this check once we're sure the feature works correctly in production
         return false;
     }
-    for (const _ of metadata) {
-        return true;
-    }
-    return false;
+    let hasContent = false;
+    metadata.forEach(() => {
+        hasContent = true;
+    });
+    return hasContent;
 };
 
 /**
@@ -51,19 +50,19 @@ const hasMetadata = () => {
  * @param {RequestInit} [options] The initial request options. May be null or undefined.
  * @returns {RequestInit|undefined} the provided options parameter without modification, or a new options object.
  */
-const applyMetadata = options => {
+const applyMetadata = (options?: RequestInit): RequestInit | undefined => {
     if (hasMetadata()) {
-        const augmentedOptions = Object.assign({}, options);
-        augmentedOptions.headers = new crossFetch.Headers(metadata);
+        const augmentedOptions = Object.assign({}, options) as RequestInit;
+        augmentedOptions.headers = new Headers(metadata);
         if (options && options.headers) {
             // the Fetch spec says options.headers could be:
             // "A Headers object, an object literal, or an array of two-item arrays to set request's headers."
             // turn it into a Headers object to be sure of how to interact with it
-            const overrideHeaders = options.headers instanceof crossFetch.Headers ?
-                options.headers : new crossFetch.Headers(options.headers);
-            for (const [name, value] of overrideHeaders.entries()) {
-                augmentedOptions.headers.set(name, value);
-            }
+            const overrideHeaders: Headers = options.headers instanceof Headers ?
+                options.headers : new Headers(options.headers as HeadersInit);
+            overrideHeaders.forEach((value: string, name: string) => {
+                (augmentedOptions.headers as Headers).set(name, value);
+            });
         }
         return augmentedOptions;
     }
@@ -78,49 +77,45 @@ const applyMetadata = options => {
  * @see {@link https://developer.mozilla.org/docs/Web/API/fetch} for more about the fetch API.
  * @returns {Promise<Response>} A promise for the response to the request.
  */
-const scratchFetch = (resource, options) => {
+const scratchFetch = (resource: RequestInfo | URL, options?: RequestInit): Promise<Response> => {
     const augmentedOptions = applyMetadata(options);
-    return crossFetch.fetch(resource, augmentedOptions);
+    return fetch(resource, augmentedOptions);
 };
 
 /**
  * Set the value of a named request metadata item.
  * Setting the value to `null` or `undefined` will NOT remove the item.
  * Use `unsetMetadata` for that.
- * @param {RequestMetadata} name The name of the metadata item to set.
+ * @param {string} name The name of the metadata item to set.
  * @param {any} value The value to set (will be converted to a string).
  */
-const setMetadata = (name, value) => {
+const setMetadata = (name: string, value: any) => {
     metadata.set(name, value);
 };
 
 /**
  * Remove a named request metadata item.
- * @param {RequestMetadata} name The name of the metadata item to remove.
+ * @param {string} name The name of the metadata item to remove.
  */
-const unsetMetadata = name => {
+const unsetMetadata = (name: string) => {
     metadata.delete(name);
 };
 
-module.exports = {
-    default: scratchFetch,
+/**
+ * Retrieve a named request metadata item.
+ * Only for use in tests.
+ * @param {string} name The name of the metadata item to retrieve.
+ * @returns {any} value The value of the metadata item, or `undefined` if it was not found.
+ */
+const getMetadata = (name: string): any => metadata.get(name);
 
-    Headers: crossFetch.Headers,
+export {
+    scratchFetch,
     RequestMetadata,
     applyMetadata,
-    scratchFetch,
     setMetadata,
-    unsetMetadata
+    unsetMetadata,
+    getMetadata
 };
 
-if (process.env.NODE_ENV === 'development') {
-    /**
-     * Retrieve a named request metadata item.
-     * Only for use in tests.
-     * @param {RequestMetadata} name The name of the metadata item to retrieve.
-     * @returns {any} value The value of the metadata item, or `undefined` if it was not found.
-     */
-    const getMetadata = name => metadata.get(name);
-
-    module.exports.getMetadata = getMetadata;
-}
+export default scratchFetch;

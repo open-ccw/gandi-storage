@@ -1,8 +1,10 @@
-const {scratchFetch} = require('./scratchFetch');
+import { scratchFetch } from './scratchFetch';
 
-/**
- * @typedef {Request & {withCredentials: boolean}} ScratchSendRequest
- */
+interface RequestConfig {
+    url: string;
+    withCredentials?: boolean;
+    [key: string]: any;
+}
 
 /**
  * Get and send assets with the fetch standard web api.
@@ -13,17 +15,17 @@ class FetchTool {
      * Always true for `FetchTool` because `scratchFetch` ponyfills `fetch` if necessary.
      * @returns {boolean} Is get supported?
      */
-    get isGetSupported () {
+    get isGetSupported (): boolean {
         return true;
     }
 
     /**
      * Request data from a server with fetch.
-     * @param {Request} reqConfig - Request configuration for data to get.
+     * @param {RequestConfig} reqConfig - Request configuration for data to get.
      * @returns {Promise.<Uint8Array?>} Resolve to Buffer of data from server.
      */
-    get ({url, ...options}) {
-        return scratchFetch(url, Object.assign({method: 'GET'}, options))
+    get ({url, ...options}: RequestConfig): Promise<Uint8Array | null> {
+        return scratchFetch(url, Object.assign({method: 'GET'} as RequestInit, options))
             .then(result => {
                 if (result.ok) return result.arrayBuffer().then(b => new Uint8Array(b));
                 if (result.status === 404) return null;
@@ -36,19 +38,19 @@ class FetchTool {
      * Always true for `FetchTool` because `scratchFetch` ponyfills `fetch` if necessary.
      * @returns {boolean} Is sending supported?
      */
-    get isSendSupported () {
+    get isSendSupported (): boolean {
         return true;
     }
 
     /**
      * Send data to a server with fetch.
-     * @param {ScratchSendRequest} reqConfig - Request configuration for data to send.
+     * @param {RequestConfig} reqConfig - Request configuration for data to send.
      * @returns {Promise.<string>} Server returned metadata.
      */
-    send ({url, withCredentials = false, ...options}) {
+    send ({url, withCredentials = false, ...options}: RequestConfig): Promise<string> {
         return scratchFetch(url, Object.assign({
-            credentials: withCredentials ? 'include' : 'omit'
-        }, options))
+            credentials: withCredentials ? 'include' as RequestCredentials : 'omit' as RequestCredentials
+        } as RequestInit, options))
             .then(response => {
                 if (response.ok) return response.text();
                 return Promise.reject(response.status);
@@ -56,4 +58,4 @@ class FetchTool {
     }
 }
 
-module.exports = FetchTool;
+export default FetchTool;
