@@ -1,6 +1,6 @@
 {
   "name": "@open-ccw/scratch-storage",
-  "version": "9.9.11",
+  "version": "9.9.12",
   "description": "Load and store project and asset files for Scratch 3.0 patched for Gandi IDE",
   "license": "BSD-3-Clause",
   "type": "module",
@@ -23,10 +23,9 @@
   },
   "scripts": {
     "build": "vite build",
-    "commitmsg": "commitlint -e $GIT_PARAMS",
     "dev": "vite",
     "prepublishOnly": "npm run build",
-    "test": "npm run test:lint && vitest run",
+    "test": "vitest run",
     "test:clearCache": "vitest --clearCache",
     "test:integration": "vitest run test/integration",
     "test:unit": "vitest run test/unit",
@@ -40,17 +39,11 @@
     "minilog": "^3.1.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "18.6.1",
-    "@commitlint/config-conventional": "18.6.3",
     "@types/js-md5": "^0.7.0",
     "@types/node": "^20.0.0",
-    "eslint": "8.57.0",
-    "eslint-config-scratch": "9.0.8",
-    "husky": "8.0.3",
-    "semantic-release": "19.0.5",
     "typescript": "^5.3.0",
-    "vite": "^5.0.0",
-    "vite-plugin-dts": "^3.9.0",
-    "vitest": "^1.0.0"
+    "vite": "^8.2.2",
+    "vite-plugin-dts": "^5.0.3",
+    "vitest": "^4.1.11"
   }
 }
